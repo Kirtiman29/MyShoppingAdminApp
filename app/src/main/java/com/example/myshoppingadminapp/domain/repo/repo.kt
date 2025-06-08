@@ -1,5 +1,6 @@
 package com.example.myshoppingadminapp.domain.repo
 
+import android.net.Uri
 import com.example.myshoppingadminapp.common.State
 import com.example.myshoppingadminapp.domain.model.ProductDataModel
 import com.example.myshoppingadminapp.domain.model.category
@@ -11,5 +12,9 @@ interface repo {
 
     fun getCategories() : Flow<State<List<category>>>
 
-    fun addProducts(ProductDataModel: ProductDataModel): Flow<State<String>>
+     fun addProducts(ProductDataModel: ProductDataModel): Flow<State<String>>
+
+     fun uploadImage(image: Uri): Flow<State<String>>
+
+
 }

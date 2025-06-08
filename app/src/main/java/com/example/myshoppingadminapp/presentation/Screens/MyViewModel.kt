@@ -1,5 +1,6 @@
 package com.example.myshoppingadminapp.presentation.Screens
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myshoppingadminapp.common.State
@@ -29,6 +30,32 @@ class MyViewModel
     val addCategory = _addCategoryState.asStateFlow()
     val getCategories = _getCategoriesState.asStateFlow()
     val addProducts = _addProductsState.asStateFlow()
+
+    private var _uploadProductImageState = MutableStateFlow(uploadProductImageState())
+    val uploadProductImage = _uploadProductImageState.asStateFlow()
+
+
+
+    fun uploadProdImage(imageUri: Uri){
+        viewModelScope.launch {
+            repo.uploadImage(image=imageUri).collectLatest {
+                when(it){
+                    is State.Loading ->{
+                        _uploadProductImageState.value = uploadProductImageState(isLoading = true)
+                    }
+                    is State.Success ->{
+                        _uploadProductImageState.value = uploadProductImageState(message = it.data)
+                }
+                    is State.Error ->{
+                        _uploadProductImageState.value = uploadProductImageState(error = it.error)
+                    }
+                }
+
+            }
+
+        }
+    }
+
     fun addCategory(category: category) {
 
         viewModelScope.launch {
@@ -115,3 +142,8 @@ data class addProductsState(
 
 )
 
+data class uploadProductImageState(
+    val isLoading: Boolean = false,
+    val message: String = "",
+    val error: String = ""
+)

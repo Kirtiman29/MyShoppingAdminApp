@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,5 +75,7 @@ dependencies {
 
     implementation ("com.google.firebase:firebase-auth:22.3.0")
     implementation ("com.google.android.gms:play-services-auth:21.0.0")
+
+    implementation("io.coil-kt.coil3:coil-compose:3.2.0")
 
 }

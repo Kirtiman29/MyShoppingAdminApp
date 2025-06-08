@@ -3,6 +3,7 @@ package com.example.myshoppingadminapp.presentation.di
 import com.example.myshoppingadminapp.data.repoimpl.repoimple
 import com.example.myshoppingadminapp.domain.repo.repo
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,10 +18,12 @@ object UIModels {
 
     @Provides
     fun provideRepo(
-        firebaseFirestore: FirebaseFirestore
+        firebaseFirestore: FirebaseFirestore,
+        firebaseStorage: FirebaseStorage
     ): repo{
         return repoimple(
-            firebaseFirestore
+            firebaseFirestore ,
+            firebaseStorage = firebaseStorage
         )
 
 
