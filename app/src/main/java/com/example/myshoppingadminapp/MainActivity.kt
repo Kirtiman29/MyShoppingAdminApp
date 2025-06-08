@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.myshoppingadminapp.presentation.Screens.addCategoryScreen
+import com.example.myshoppingadminapp.presentation.Screens.addProductScreen
 import com.example.myshoppingadminapp.ui.theme.MyShoppingAdminAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,25 +24,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyShoppingAdminAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    addCategoryScreen()
+                    //addCategoryScreen()
+                    addProductScreen()
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MyShoppingAdminAppTheme {
-        Greeting("Android")
     }
 }

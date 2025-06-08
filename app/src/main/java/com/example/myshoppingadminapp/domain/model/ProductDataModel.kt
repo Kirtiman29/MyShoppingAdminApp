@@ -9,6 +9,5 @@ data class ProductDataModel (
     val imageUri : String = "",
     val date: Long = System.currentTimeMillis(),
     val availableUnits: Int = 0,
-    val isAvailable: Boolean = true,
-    val productId: String = ""
+    val isAvailable: Boolean = true
 )
