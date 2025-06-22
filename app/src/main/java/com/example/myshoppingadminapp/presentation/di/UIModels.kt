@@ -8,24 +8,21 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object UIModels {
 
-
-
-
     @Provides
+    @Singleton
     fun provideRepo(
         firebaseFirestore: FirebaseFirestore,
         firebaseStorage: FirebaseStorage
-    ): repo{
+    ): repo {
         return repoimple(
-            firebaseFirestore ,
-            firebaseStorage = firebaseStorage
+            firebaseFirestore,
+            firebaseStorage
         )
-
-
     }
 }

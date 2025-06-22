@@ -13,137 +13,103 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 @HiltViewModel
-class MyViewModel
-    @Inject constructor(
-        private val repo: repo
-    )
-    : ViewModel() {
+class MyViewModel @Inject constructor(
+    private val repo: repo // Capitalized interface name
+) : ViewModel() {
 
-    private var _addCategoryState = MutableStateFlow(addCategoryState())
-
-    private var _getCategoriesState = MutableStateFlow(getCategoryState())
-
-    private var _addProductsState = MutableStateFlow(addProductsState())
-
+    // States should use proper naming convention (capitalized)
+    private val _addCategoryState = MutableStateFlow(AddCategoryState())
     val addCategory = _addCategoryState.asStateFlow()
+
+    private val _getCategoriesState = MutableStateFlow(GetCategoryState())
     val getCategories = _getCategoriesState.asStateFlow()
+
+    private val _addProductsState = MutableStateFlow(AddProductsState())
     val addProducts = _addProductsState.asStateFlow()
 
-    private var _uploadProductImageState = MutableStateFlow(uploadProductImageState())
+    private val _uploadProductImageState = MutableStateFlow(UploadProductImageState())
     val uploadProductImage = _uploadProductImageState.asStateFlow()
 
-
-
-    fun uploadProdImage(imageUri: Uri){
+    fun uploadProdImage(imageUri: Uri) {
         viewModelScope.launch {
-            repo.uploadImage(image=imageUri).collectLatest {
-                when(it){
-                    is State.Loading ->{
-                        _uploadProductImageState.value = uploadProductImageState(isLoading = true)
-                    }
-                    is State.Success ->{
-                        _uploadProductImageState.value = uploadProductImageState(message = it.data)
-                }
-                    is State.Error ->{
-                        _uploadProductImageState.value = uploadProductImageState(error = it.error)
-                    }
-                }
-
-            }
-
-        }
-    }
-
-    fun addCategory(category: category) {
-
-        viewModelScope.launch {
-            repo.addCategory(category).collectLatest {
-                when (it) {
-                    is State.Loading -> {
-                        _addCategoryState.value = addCategoryState(isLoading = true)
-                    }
-
-                    is State.Success -> {
-                        _addCategoryState.value = addCategoryState(message = it.data)
-
-                    }
-                    is State.Error ->{
-                        _addCategoryState.value = addCategoryState(error = it.error)
-                    }
-                }
-            }
-
-        }
-
-
-    }
-
-    fun getCategories(){
-        viewModelScope.launch {
-            repo.getCategories().collectLatest {
-                when(it){
-                    is State.Loading ->{
-                        _getCategoriesState.value = getCategoryState(isLoading = true)
-                    }
-                    is State.Success ->{
-                        _getCategoriesState.value = getCategoryState(message = it.data.toString())
-                    }
-                    is State.Error -> {
-                        _getCategoriesState.value = getCategoryState(error = it.error)
-                    }
-
+            repo.uploadImage(image = imageUri).collectLatest { state ->
+                _uploadProductImageState.value = when(state) {
+                    is State.Loading -> UploadProductImageState(isLoading = true)
+                    is State.Success -> UploadProductImageState(imageUrl = state.data)
+                    is State.Error -> UploadProductImageState(error = state.error)
                 }
             }
         }
     }
 
-    fun addProducts(ProductDataModel: ProductDataModel) {
+    fun addCategory(category: category) { // Capitalized model name
         viewModelScope.launch {
-            repo.addProducts(ProductDataModel).collectLatest {
-                when(it){
-                    is State.Loading ->{
-                        _addProductsState.value = addProductsState(isLoading = true)
-                    }
-                    is State.Success ->{
-                        _addProductsState.value = addProductsState(message = it.data)
-                    }
-                    is State.Error ->{
-                        _addProductsState.value = addProductsState(error = it.error)
-
-                    }
+            repo.addCategory(category = category).collectLatest { state ->
+                _addCategoryState.value = when(state) {
+                    is State.Loading -> AddCategoryState(isLoading = true)
+                    is State.Success -> AddCategoryState(successMessage = state.data)
+                    is State.Error -> AddCategoryState(error = state.error)
                 }
             }
         }
+    }
 
+    fun getCategories() {
+        viewModelScope.launch {
+            repo.getCategories().collectLatest { state ->
+                _getCategoriesState.value = when(state) {
+                    is State.Loading -> GetCategoryState(isLoading = true)
+                    is State.Success -> GetCategoryState(categories = state.data)
+                    is State.Error -> GetCategoryState(error = state.error)
+                }
+            }
+        }
+    }
+
+    fun addProducts(productDataModel: ProductDataModel) {
+        viewModelScope.launch {
+            repo.addProducts(productDataModel).collectLatest { state ->
+                _addProductsState.value = when(state) {
+                    is State.Loading -> AddProductsState(isLoading = true)
+                    is State.Success -> AddProductsState(successMessage = state.data)
+                    is State.Error -> AddProductsState(error = state.error)
+                }
+            }
+        }
+    }
+
+    // Add reset functions for states
+    fun resetAddCategoryState() {
+        _addCategoryState.value = AddCategoryState()
+    }
+
+    fun resetAddProductState() {
+        _addProductsState.value = AddProductsState()
     }
 }
 
-data class addCategoryState(
+// Improved state classes with better field names
+data class AddCategoryState(
     val isLoading: Boolean = false,
-    val message: String = "",
+    val successMessage: String = "",
     val error: String = ""
-
 )
 
-data class getCategoryState(
+data class GetCategoryState(
     val isLoading: Boolean = false,
-    val message: String = "",
+    val categories: List<category> = emptyList(), // Better than using toString()
     val error: String = ""
-
 )
 
-
-data class addProductsState(
+data class AddProductsState(
     val isLoading: Boolean = false,
-    val message: String = "",
+    val successMessage: String = "",
     val error: String = ""
-
 )
 
-data class uploadProductImageState(
+data class UploadProductImageState(
     val isLoading: Boolean = false,
-    val message: String = "",
+    val imageUrl: String = "", // More specific than 'message'
     val error: String = ""
 )
