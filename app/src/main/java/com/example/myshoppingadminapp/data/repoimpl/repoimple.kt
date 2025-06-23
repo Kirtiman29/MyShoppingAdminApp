@@ -72,21 +72,29 @@ class repoimple @Inject constructor(
     override fun uploadImage(image: Uri): Flow<State<String>> = callbackFlow {
         trySend(State.Loading)
 
+        val storageRef = firebaseStorage.reference
+            .child("Products/${System.currentTimeMillis()}")
 
-        firebaseStorage.reference.child("Products/${System.currentTimeMillis()}")
-            .putFile(image ?: Uri.EMPTY).addOnSuccessListener {
-                it.storage.downloadUrl.addOnCanceledListener {
-                    trySend(State.Success(it.toString()))
-
-                }
-                if (it.error != null) {
-                    trySend(State.Error(it.error!!.message.toString()))
-
-                }
+        storageRef.putFile(image)
+            .addOnSuccessListener {
+                storageRef.downloadUrl
+                    .addOnSuccessListener { downloadUri ->
+                        trySend(State.Success(downloadUri.toString()))
+                        close()
+                    }
+                    .addOnFailureListener { error ->
+                        trySend(State.Error(error.message ?: "Failed to get download URL"))
+                        close()
+                    }
             }
-        awaitClose {
-            close()
-        }
+            .addOnFailureListener { error ->
+                trySend(State.Error(error.message ?: "Image upload failed"))
+                close()
+            }
 
+        awaitClose {
+            // No-op, we already call close() above.
+        }
     }
+
 }

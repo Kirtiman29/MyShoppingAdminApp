@@ -67,7 +67,6 @@ fun addProductScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     // Form state
     var productName by remember { mutableStateOf("") }
@@ -79,12 +78,10 @@ fun addProductScreen(
     var productIsAvailable by remember { mutableStateOf(true) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // State from ViewModel
     val uploadState = viewModel.uploadProductImage.collectAsState()
     val addProductState = viewModel.addProducts.collectAsState()
     val categoriesState = viewModel.getCategories.collectAsState()
 
-    // Image picker
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -94,23 +91,34 @@ fun addProductScreen(
         }
     }
 
-    // Handle side effects
+    // Load categories
+    LaunchedEffect(Unit) {
+        viewModel.getCategories()
+    }
+
+    // Show image upload message
     LaunchedEffect(uploadState.value.imageUrl) {
-        uploadState.value.imageUrl.let { url ->
-            // Image uploaded successfully
+        if (!uploadState.value.imageUrl.isNullOrEmpty()) {
             Toast.makeText(context, "Image uploaded", Toast.LENGTH_SHORT).show()
         }
     }
 
+    // On product added success
     LaunchedEffect(addProductState.value.successMessage) {
-        addProductState.value.successMessage.let { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            onBack() // Navigate back after success
+        if (!addProductState.value.successMessage.isNullOrEmpty()) {
+            Toast.makeText(context, addProductState.value.successMessage, Toast.LENGTH_SHORT).show()
+            // Clear form after submission
+            productName = ""
+            productDescription = ""
+            productPrice = ""
+            productFinalPrice = ""
+            productCategory = ""
+            productAvailableUnits = ""
+            productIsAvailable = true
+            imageUri = null
+            viewModel.resetAddProductState()
+            onBack()
         }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.getCategories()
     }
 
     Scaffold(
@@ -129,16 +137,10 @@ fun addProductScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Loading indicator
-//            if (uploadState.value.isLoading || addProductState.value.isLoading) {
-//                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-//            }
-
-            // Image upload section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,9 +148,7 @@ fun addProductScreen(
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable {
-                        imagePicker.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
+                        imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -160,29 +160,17 @@ fun addProductScreen(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add Image"
-                        )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Image")
                         Text("Add Product Image")
                     }
                 }
             }
 
-            // Error messages
             uploadState.value.error?.let { error ->
-                Text(
-                    text = "Image Error: $error",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelSmall
-                )
+                Text("Image Error: $error", color = MaterialTheme.colorScheme.error)
             }
 
-            // Form fields
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
@@ -198,6 +186,7 @@ fun addProductScreen(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )
+
             OutlinedTextField(
                 value = productCategory,
                 onValueChange = { productCategory = it },
@@ -214,7 +203,6 @@ fun addProductScreen(
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-
                 OutlinedTextField(
                     value = productFinalPrice,
                     onValueChange = { productFinalPrice = it },
@@ -224,21 +212,8 @@ fun addProductScreen(
                 )
             }
 
-            // Category dropdown
             var expanded by remember { mutableStateOf(false) }
             Box(modifier = Modifier.fillMaxWidth()) {
-//                OutlinedTextField(
-//                    value = productCategory,
-//                    onValueChange = {},
-//                    label = { Text("Category") },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    readOnly = true,
-//                    trailingIcon = {
-//                        Icon(Icons.Default.ArrowDropDown, null)
-//                    },
-//                    onClick = { expanded = true }
-//                )
-
                 DropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
@@ -263,10 +238,7 @@ fun addProductScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(
                     checked = productIsAvailable,
                     onCheckedChange = { productIsAvailable = it }
@@ -274,7 +246,6 @@ fun addProductScreen(
                 Text("Product Available")
             }
 
-            // Submit button
             Button(
                 onClick = {
                     if (imageUri == null) {
@@ -282,10 +253,11 @@ fun addProductScreen(
                         return@Button
                     }
 
-                    if (uploadState.value.imageUrl == null) {
-                        Toast.makeText(context, "Please wait for image to upload", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
+                   // val uploadedUrl = uploadState.value.imageUrl
+//                    if (uploadedUrl.isEmpty()) {
+//                        Toast.makeText(context, "Please wait for image upload", Toast.LENGTH_SHORT).show()
+//                        return@Button
+//                    }
 
                     val product = ProductDataModel(
                         name = productName,
@@ -293,26 +265,19 @@ fun addProductScreen(
                         price = productPrice,
                         finalprice = productFinalPrice,
                         category = productCategory,
-                        imageUri = imageUri.toString(),
+                        imageUri = uploadState.value.imageUrl, // ✅ Firebase download URL
                         availableUnits = productAvailableUnits.toIntOrNull() ?: 0,
                         isAvailable = productIsAvailable
                     )
-
                     viewModel.addProducts(product)
                 },
-                modifier = Modifier.fillMaxWidth(),
-                //enabled = !addProductState.value.isLoading && !uploadState.value.isLoading
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Add Product")
             }
 
-            // Show errors
             addProductState.value.error?.let { error ->
-                Text(
-                    text = "Error: $error",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelSmall
-                )
+                Text("Error: $error", color = MaterialTheme.colorScheme.error)
             }
         }
     }
