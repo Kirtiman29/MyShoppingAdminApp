@@ -1,5 +1,6 @@
 package com.example.myshoppingadminapp.presentation.Screens
 
+import android.R.attr.id
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -58,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.example.myshoppingadminapp.domain.model.ProductDataModel
+import java.util.UUID
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,6 +109,7 @@ fun addProductScreen(
     LaunchedEffect(addProductState.value.successMessage) {
         if (!addProductState.value.successMessage.isNullOrEmpty()) {
             Toast.makeText(context, addProductState.value.successMessage, Toast.LENGTH_SHORT).show()
+
             // Clear form after submission
             productName = ""
             productDescription = ""
@@ -260,6 +263,7 @@ fun addProductScreen(
 //                    }
 
                     val product = ProductDataModel(
+                        id = UUID.randomUUID().toString(),
                         name = productName,
                         description = productDescription,
                         price = productPrice,

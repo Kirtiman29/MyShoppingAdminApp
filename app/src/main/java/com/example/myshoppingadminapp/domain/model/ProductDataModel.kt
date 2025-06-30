@@ -1,6 +1,7 @@
 package com.example.myshoppingadminapp.domain.model
 
 data class ProductDataModel (
+    val id: String = "",
     val name: String = "",
     val description : String = "",
     val price: String = "",
